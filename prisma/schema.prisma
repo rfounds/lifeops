@@ -104,6 +104,8 @@ model Task {
   nextDueDate        DateTime
   lastCompletedDate  DateTime?
   notes              String?
+  cost               Float?       // Cost associated with this task (Pro feature)
+  completionCount    Int          @default(0) // Number of times completed
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 

@@ -36,6 +36,9 @@ export async function createTask(formData: FormData): Promise<TaskActionResult> 
     notes: formData.get("notes") || null,
   };
 
+  const costValue = formData.get("cost");
+  const cost = costValue ? parseFloat(costValue as string) : null;
+
   const parsed = taskSchema.safeParse(rawData);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
@@ -62,6 +65,7 @@ export async function createTask(formData: FormData): Promise<TaskActionResult> 
         scheduleValue: parsed.data.scheduleValue,
         nextDueDate: parsed.data.nextDueDate,
         notes: parsed.data.notes,
+        cost,
         householdId,
       },
     });
@@ -90,6 +94,9 @@ export async function updateTask(
     nextDueDate: formData.get("nextDueDate"),
     notes: formData.get("notes") || null,
   };
+
+  const costValue = formData.get("cost");
+  const cost = costValue ? parseFloat(costValue as string) : null;
 
   const parsed = taskSchema.safeParse(rawData);
   if (!parsed.success) {
@@ -126,6 +133,7 @@ export async function updateTask(
         scheduleValue: parsed.data.scheduleValue,
         nextDueDate: parsed.data.nextDueDate,
         notes: parsed.data.notes,
+        cost,
         householdId,
       },
     });
@@ -185,6 +193,7 @@ export async function completeTask(taskId: string): Promise<TaskActionResult> {
       where: { id: taskId },
       data: {
         lastCompletedDate: today,
+        completionCount: { increment: 1 },
       },
     });
 

@@ -44,6 +44,11 @@ export function Header({ user, signOutAction }: HeaderProps) {
               <Link href="/dashboard" className={navLinkClass("/dashboard")}>
                 Dashboard
               </Link>
+              {user?.plan === "PRO" && (
+                <Link href="/analytics" className={navLinkClass("/analytics")}>
+                  Analytics
+                </Link>
+              )}
               <Link href="/pricing" className={navLinkClass("/pricing")}>
                 Pricing
               </Link>
@@ -163,6 +168,15 @@ export function Header({ user, signOutAction }: HeaderProps) {
                 >
                   Dashboard
                 </Link>
+                {user?.plan === "PRO" && (
+                  <Link
+                    href="/analytics"
+                    className={mobileNavLinkClass("/analytics")}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Analytics
+                  </Link>
+                )}
                 <Link
                   href="/pricing"
                   className={mobileNavLinkClass("/pricing")}

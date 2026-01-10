@@ -73,6 +73,7 @@ export function TaskForm({ task, onClose, onSuccess, canCreate, householdId, cur
       : 1
   );
   const [notes, setNotes] = useState(task?.notes || "");
+  const [cost, setCost] = useState<string>(task?.cost ? String(task.cost) : "");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -104,6 +105,11 @@ export function TaskForm({ task, onClose, onSuccess, canCreate, householdId, cur
       formData.set("nextDueDate", format(yearlyDate, "yyyy-MM-dd"));
     } else {
       formData.set("nextDueDate", nextDueDate);
+    }
+
+    // Cost (Pro feature)
+    if (cost) {
+      formData.set("cost", cost);
     }
 
     // Household sharing
@@ -292,6 +298,27 @@ export function TaskForm({ task, onClose, onSuccess, canCreate, householdId, cur
                 className={`${inputClass} resize-none`}
                 placeholder="Any additional details..."
               />
+            </div>
+
+            <div>
+              <label className={labelClass}>
+                Cost <span className="text-[rgb(var(--muted-foreground))] font-normal">(optional)</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--muted-foreground))]">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={cost}
+                  onChange={(e) => setCost(e.target.value)}
+                  className={`${inputClass} pl-7`}
+                  placeholder="0.00"
+                />
+              </div>
+              <p className="text-xs text-[rgb(var(--muted-foreground))] mt-1">
+                Track annual cost for analytics
+              </p>
             </div>
 
             {canShare && (
