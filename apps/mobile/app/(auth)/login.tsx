@@ -76,7 +76,7 @@ export default function LoginScreen() {
             placeholderTextColor={colors.light.mutedForeground}
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
+            secureTextEntry={true}
             autoComplete="password"
           />
 

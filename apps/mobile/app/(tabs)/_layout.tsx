@@ -35,7 +35,8 @@ export default function TabLayout() {
         tabBarShowLabel: false,
         headerStyle: {
           backgroundColor: colors.light.card,
-          shadowColor: "transparent",
+          elevation: 0,
+          shadowOpacity: 0,
           borderBottomWidth: 1,
           borderBottomColor: colors.light.border,
         },
@@ -54,17 +55,16 @@ export default function TabLayout() {
           ),
         }}
       />
-      {isPro && (
-        <Tabs.Screen
-          name="analytics"
-          options={{
-            title: "Analytics",
-            tabBarIcon: ({ focused }) => (
-              <TabIcon icon="📊" focused={focused} label="Analytics" />
-            ),
-          }}
-        />
-      )}
+      <Tabs.Screen
+        name="analytics"
+        options={{
+          title: "Analytics",
+          href: isPro ? "/analytics" : null,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon icon="📊" focused={focused} label="Analytics" />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="settings"
         options={{
