@@ -9,7 +9,7 @@ import { DashboardStats, FilterType } from "@/components/DashboardStats";
 import { differenceInDays, startOfDay, startOfWeek } from "date-fns";
 
 type TaskWithUser = Task & {
-  user: { id: string; name: string | null; email: string };
+  user?: { id: string; name: string | null; email: string };
 };
 
 type DashboardClientProps = {
