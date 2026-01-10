@@ -1,0 +1,48 @@
+{
+  "name": "@lifeops/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./validations": {
+      "import": "./dist/validations.mjs",
+      "require": "./dist/validations.js",
+      "types": "./dist/validations.d.ts"
+    },
+    "./schedule-utils": {
+      "import": "./dist/schedule-utils.mjs",
+      "require": "./dist/schedule-utils.js",
+      "types": "./dist/schedule-utils.d.ts"
+    },
+    "./templates-data": {
+      "import": "./dist/templates-data.mjs",
+      "require": "./dist/templates-data.js",
+      "types": "./dist/templates-data.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types.mjs",
+      "require": "./dist/types.js",
+      "types": "./dist/types.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts src/validations.ts src/schedule-utils.ts src/templates-data.ts src/types.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/validations.ts src/schedule-utils.ts src/templates-data.ts src/types.ts --format cjs,esm --dts --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.3.5",
+    "date-fns": "^4.1.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0",
+    "typescript": "^5"
+  }
+}
