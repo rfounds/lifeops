@@ -36,6 +36,10 @@ yarn-error.log*
 .env.*.local
 !.env.example
 
+# local database
+*.db
+*.db-journal
+
 # vercel
 .vercel
 
