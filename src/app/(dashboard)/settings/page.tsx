@@ -1,4 +1,4 @@
-import { getReminderSettings } from "@/actions/settings";
+import { getReminderSettings, getAccountInfo } from "@/actions/settings";
 import { getUserHousehold, getPendingInvites } from "@/actions/household";
 import { SettingsClient } from "./SettingsClient";
 
@@ -7,10 +7,11 @@ export const metadata = {
 };
 
 export default async function SettingsPage() {
-  const [settings, household, pendingInvites] = await Promise.all([
+  const [settings, household, pendingInvites, account] = await Promise.all([
     getReminderSettings(),
     getUserHousehold(),
     getPendingInvites(),
+    getAccountInfo(),
   ]);
 
   return (
@@ -18,6 +19,7 @@ export default async function SettingsPage() {
       initialSettings={settings}
       household={household}
       pendingInvites={pendingInvites}
+      account={account}
     />
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateReminderSettings } from "@/actions/settings";
+import { updateReminderSettings, updateAccountInfo, changePassword } from "@/actions/settings";
 import {
   createHousehold,
   inviteToHousehold,
@@ -50,6 +50,13 @@ type PendingInvite = {
   };
 };
 
+type AccountInfo = {
+  name: string;
+  email: string;
+  plan: string;
+  createdAt: Date;
+};
+
 type SettingsClientProps = {
   initialSettings: {
     emailReminders: boolean;
@@ -60,6 +67,7 @@ type SettingsClientProps = {
   };
   household: Household | null;
   pendingInvites: PendingInvite[];
+  account: AccountInfo;
 };
 
 const REMINDER_DAY_OPTIONS = [
@@ -69,8 +77,19 @@ const REMINDER_DAY_OPTIONS = [
   { value: 0, label: "Day of" },
 ];
 
-export function SettingsClient({ initialSettings, household, pendingInvites }: SettingsClientProps) {
+export function SettingsClient({ initialSettings, household, pendingInvites, account }: SettingsClientProps) {
   const router = useRouter();
+
+  // Account state
+  const [name, setName] = useState(account.name);
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [accountMessage, setAccountMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Reminder settings state
   const [emailReminders, setEmailReminders] = useState(initialSettings.emailReminders);
   const [smsReminders, setSmsReminders] = useState(initialSettings.smsReminders);
   const [phoneNumber, setPhoneNumber] = useState(initialSettings.phoneNumber);
@@ -88,6 +107,39 @@ export function SettingsClient({ initialSettings, household, pendingInvites }: S
 
   const isPro = initialSettings.isPro;
   const isOwner = household?.userRole === "OWNER";
+
+  async function handleUpdateAccount() {
+    setAccountLoading(true);
+    setAccountMessage(null);
+    const result = await updateAccountInfo({ name });
+    if (result.success) {
+      setAccountMessage({ type: "success", text: "Account updated successfully!" });
+      router.refresh();
+    } else {
+      setAccountMessage({ type: "error", text: result.error || "Failed to update account" });
+    }
+    setAccountLoading(false);
+  }
+
+  async function handleChangePassword() {
+    if (newPassword !== confirmPassword) {
+      setAccountMessage({ type: "error", text: "New passwords do not match" });
+      return;
+    }
+    setAccountLoading(true);
+    setAccountMessage(null);
+    const result = await changePassword({ currentPassword, newPassword });
+    if (result.success) {
+      setAccountMessage({ type: "success", text: "Password changed successfully!" });
+      setShowPasswordForm(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } else {
+      setAccountMessage({ type: "error", text: result.error || "Failed to change password" });
+    }
+    setAccountLoading(false);
+  }
 
   async function handleSave() {
     setLoading(true);
@@ -217,8 +269,154 @@ export function SettingsClient({ initialSettings, household, pendingInvites }: S
           Settings
         </h1>
         <p className="text-[rgb(var(--muted-foreground))] mt-2 text-sm sm:text-base">
-          Manage your notification preferences
+          Manage your account and preferences
         </p>
+      </div>
+
+      {/* Account Section */}
+      <div className="mb-10">
+        <div className="flex items-center gap-2 mb-4">
+          <svg className="w-5 h-5 text-[rgb(var(--primary))]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          </svg>
+          <h2 className="text-lg font-semibold text-[rgb(var(--foreground))]">Account</h2>
+        </div>
+
+        {accountMessage && (
+          <div
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-4 ${
+              accountMessage.type === "success"
+                ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+                : "bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300"
+            }`}
+          >
+            {accountMessage.type === "success" ? (
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+            {accountMessage.text}
+          </div>
+        )}
+
+        <div className="bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-xl p-5 sm:p-6 space-y-5">
+          {/* Profile Info */}
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[rgb(var(--primary))] to-[rgb(var(--accent))] flex items-center justify-center text-white text-xl font-semibold">
+              {(account.name || account.email)[0].toUpperCase()}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-[rgb(var(--foreground))]">
+                  {account.name || "No name set"}
+                </span>
+                {account.plan === "PRO" && (
+                  <span className="text-xs font-semibold bg-gradient-to-r from-[rgb(var(--primary))] to-[rgb(var(--accent))] text-white px-2 py-0.5 rounded-full">
+                    PRO
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-[rgb(var(--muted-foreground))]">{account.email}</p>
+              <p className="text-xs text-[rgb(var(--muted-foreground))] mt-1">
+                Member since {new Date(account.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              </p>
+            </div>
+          </div>
+
+          {/* Edit Name */}
+          <div className="pt-4 border-t border-[rgb(var(--border))]">
+            <label className="block text-sm font-medium mb-2 text-[rgb(var(--foreground))]">
+              Display Name
+            </label>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                className="flex-1 px-3 py-2.5 bg-[rgb(var(--background))] border border-[rgb(var(--border))] rounded-xl focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))] focus:border-transparent transition-all duration-200"
+              />
+              <button
+                onClick={handleUpdateAccount}
+                disabled={accountLoading || name === account.name}
+                className="px-5 py-2.5 bg-[rgb(var(--primary))] text-white rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 font-medium"
+              >
+                {accountLoading ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+
+          {/* Change Password */}
+          <div className="pt-4 border-t border-[rgb(var(--border))]">
+            {!showPasswordForm ? (
+              <button
+                onClick={() => setShowPasswordForm(true)}
+                className="text-sm text-[rgb(var(--primary))] hover:underline font-medium"
+              >
+                Change password
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-[rgb(var(--foreground))]">
+                  Change Password
+                </label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Current password"
+                  className="w-full px-3 py-2.5 bg-[rgb(var(--background))] border border-[rgb(var(--border))] rounded-xl focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))] focus:border-transparent transition-all duration-200"
+                />
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="New password"
+                  className="w-full px-3 py-2.5 bg-[rgb(var(--background))] border border-[rgb(var(--border))] rounded-xl focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))] focus:border-transparent transition-all duration-200"
+                />
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  className="w-full px-3 py-2.5 bg-[rgb(var(--background))] border border-[rgb(var(--border))] rounded-xl focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))] focus:border-transparent transition-all duration-200"
+                />
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={accountLoading || !currentPassword || !newPassword || !confirmPassword}
+                    className="px-5 py-2.5 bg-[rgb(var(--primary))] text-white rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 font-medium"
+                  >
+                    {accountLoading ? "Updating..." : "Update Password"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowPasswordForm(false);
+                      setCurrentPassword("");
+                      setNewPassword("");
+                      setConfirmPassword("");
+                    }}
+                    className="px-5 py-2.5 text-[rgb(var(--muted-foreground))] hover:text-[rgb(var(--foreground))] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Notifications Section Header */}
+      <div className="flex items-center gap-2 mb-4">
+        <svg className="w-5 h-5 text-[rgb(var(--primary))]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+        </svg>
+        <h2 className="text-lg font-semibold text-[rgb(var(--foreground))]">Notifications</h2>
       </div>
 
       {!isPro && (

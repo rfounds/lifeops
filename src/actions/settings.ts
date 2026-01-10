@@ -2,6 +2,86 @@
 
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
+import bcrypt from "bcryptjs";
+
+export async function getAccountInfo() {
+  const user = await requireAuth();
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      name: true,
+      email: true,
+      plan: true,
+      createdAt: true,
+    },
+  });
+
+  if (!dbUser) {
+    throw new Error("User not found");
+  }
+
+  return {
+    name: dbUser.name || "",
+    email: dbUser.email,
+    plan: dbUser.plan,
+    createdAt: dbUser.createdAt,
+  };
+}
+
+export async function updateAccountInfo(
+  input: { name: string }
+): Promise<{ success: boolean; error?: string }> {
+  const user = await requireAuth();
+
+  try {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { name: input.name || null },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update account:", error);
+    return { success: false, error: "Failed to update account." };
+  }
+}
+
+export async function changePassword(
+  input: { currentPassword: string; newPassword: string }
+): Promise<{ success: boolean; error?: string }> {
+  const user = await requireAuth();
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { password: true },
+  });
+
+  if (!dbUser || !dbUser.password) {
+    return { success: false, error: "Unable to change password." };
+  }
+
+  const isValid = await bcrypt.compare(input.currentPassword, dbUser.password);
+  if (!isValid) {
+    return { success: false, error: "Current password is incorrect." };
+  }
+
+  if (input.newPassword.length < 6) {
+    return { success: false, error: "New password must be at least 6 characters." };
+  }
+
+  const hashedPassword = await bcrypt.hash(input.newPassword, 10);
+
+  try {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to change password:", error);
+    return { success: false, error: "Failed to change password." };
+  }
+}
 
 export async function getReminderSettings() {
   const user = await requireAuth();
