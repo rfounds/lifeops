@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/context/AuthContext";
-import { colors } from "../../src/theme/colors";
+import { theme } from "../../src/theme/colors";
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
@@ -92,7 +92,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: theme.background,
   },
   content: {
     padding: 16,
@@ -103,17 +103,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontFamily: "SpaceGrotesk_600SemiBold",
-    color: colors.light.mutedForeground,
+    color: theme.mutedForeground,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 8,
     marginLeft: 4,
   },
   card: {
-    backgroundColor: colors.light.card,
+    backgroundColor: theme.card,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: theme.border,
     overflow: "hidden",
   },
   row: {
@@ -125,62 +125,62 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontFamily: "SpaceGrotesk_400Regular",
-    color: colors.light.foreground,
+    color: theme.foreground,
   },
   value: {
     fontSize: 16,
     fontFamily: "SpaceGrotesk_400Regular",
-    color: colors.light.mutedForeground,
+    color: theme.mutedForeground,
   },
   divider: {
     height: 1,
-    backgroundColor: colors.light.border,
+    backgroundColor: theme.border,
     marginLeft: 16,
   },
   planBadge: {
-    backgroundColor: colors.light.muted,
+    backgroundColor: theme.muted,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
   planBadgePro: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: theme.primary,
   },
   planText: {
     fontSize: 12,
     fontFamily: "SpaceGrotesk_600SemiBold",
-    color: colors.light.mutedForeground,
+    color: theme.mutedForeground,
   },
   planTextPro: {
-    color: "white",
+    color: theme.primaryForeground,
   },
   upgradeCard: {
-    backgroundColor: "rgba(99, 102, 241, 0.06)",
+    backgroundColor: "rgba(129, 140, 248, 0.1)",
     borderRadius: 12,
     padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(99, 102, 241, 0.2)",
+    borderColor: "rgba(129, 140, 248, 0.3)",
   },
   upgradeTitle: {
     fontSize: 18,
     fontFamily: "SpaceGrotesk_600SemiBold",
-    color: colors.light.foreground,
+    color: theme.foreground,
     marginBottom: 8,
   },
   upgradeDescription: {
     fontSize: 14,
     fontFamily: "SpaceGrotesk_400Regular",
-    color: colors.light.mutedForeground,
+    color: theme.mutedForeground,
     marginBottom: 16,
   },
   upgradeButton: {
-    backgroundColor: colors.light.foreground,
+    backgroundColor: theme.foreground,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
   },
   upgradeButtonText: {
-    color: colors.light.background,
+    color: theme.background,
     fontSize: 16,
     fontFamily: "SpaceGrotesk_500Medium",
   },
@@ -193,29 +193,29 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: 16,
     fontFamily: "SpaceGrotesk_400Regular",
-    color: colors.light.foreground,
+    color: theme.foreground,
   },
   menuArrow: {
     fontSize: 20,
-    color: colors.light.mutedForeground,
+    color: theme.mutedForeground,
   },
   logoutButton: {
-    backgroundColor: colors.light.card,
+    backgroundColor: theme.card,
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: colors.light.destructive,
+    borderColor: theme.destructive,
   },
   logoutText: {
     fontSize: 16,
     fontFamily: "SpaceGrotesk_500Medium",
-    color: colors.light.destructive,
+    color: theme.destructive,
   },
   version: {
     textAlign: "center",
     fontFamily: "SpaceGrotesk_400Regular",
-    color: colors.light.mutedForeground,
+    color: theme.mutedForeground,
     fontSize: 12,
     marginTop: 8,
   },

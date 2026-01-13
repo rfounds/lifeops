@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { View, Text, StyleSheet } from "react-native";
-import { colors } from "../../src/theme/colors";
+import { theme } from "../../src/theme/colors";
 import { useAuth } from "../../src/context/AuthContext";
 
 function TabIcon({
@@ -34,14 +34,14 @@ export default function TabLayout() {
         tabBarStyle: styles.tabBar,
         tabBarShowLabel: false,
         headerStyle: {
-          backgroundColor: colors.light.card,
+          backgroundColor: theme.background,
           elevation: 0,
           shadowOpacity: 0,
           borderBottomWidth: 1,
-          borderBottomColor: colors.light.border,
+          borderBottomColor: theme.border,
         },
         headerTitleStyle: {
-          color: colors.light.foreground,
+          color: theme.foreground,
           fontFamily: "SpaceGrotesk_600SemiBold",
           fontSize: 17,
         },
@@ -81,9 +81,9 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: colors.light.card,
+    backgroundColor: theme.card,
     borderTopWidth: 1,
-    borderTopColor: colors.light.border,
+    borderTopColor: theme.border,
     height: 80,
     paddingTop: 8,
   },
@@ -101,11 +101,11 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 11,
     fontFamily: "SpaceGrotesk_400Regular",
-    color: colors.light.mutedForeground,
+    color: theme.mutedForeground,
     marginTop: 4,
   },
   tabLabelFocused: {
-    color: colors.light.foreground,
+    color: theme.foreground,
     fontFamily: "SpaceGrotesk_500Medium",
   },
 });

@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Rect, Defs, LinearGradient, Stop } from "react-native-svg";
-import { gradientColors, colors } from "../theme/colors";
+import { gradientColors, theme } from "../theme/colors";
 
 type LogoProps = {
   size?: "sm" | "md" | "lg";
@@ -70,6 +70,6 @@ const styles = StyleSheet.create({
     fontFamily: "SpaceGrotesk_700Bold",
     fontWeight: "bold",
     letterSpacing: -0.5,
-    color: colors.light.primary,
+    color: theme.primary,
   },
 });

@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import apiClient from "../../src/api/client";
-import { colors } from "../../src/theme/colors";
+import { theme } from "../../src/theme/colors";
 import { CATEGORIES, SCHEDULE_TYPES, type Category, type ScheduleType, type Task } from "@lifeops/shared";
 
 export default function TaskDetailScreen() {
@@ -115,7 +115,7 @@ export default function TaskDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.light.primary} />
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
@@ -152,7 +152,7 @@ export default function TaskDetailScreen() {
             value={title}
             onChangeText={setTitle}
             placeholder="Task title"
-            placeholderTextColor={colors.light.mutedForeground}
+            placeholderTextColor={theme.mutedForeground}
           />
         </View>
 
@@ -169,7 +169,9 @@ export default function TaskDetailScreen() {
                   ]}
                   onPress={() => setCategory(cat.value)}
                 >
-                  <Text>{cat.emoji} {cat.label}</Text>
+                  <Text style={[styles.chipText, category === cat.value && styles.chipTextSelected]}>
+                    {cat.emoji} {cat.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -188,7 +190,9 @@ export default function TaskDetailScreen() {
                 ]}
                 onPress={() => setScheduleType(type.value)}
               >
-                <Text>{type.label}</Text>
+                <Text style={[styles.chipText, scheduleType === type.value && styles.chipTextSelected]}>
+                  {type.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -203,7 +207,7 @@ export default function TaskDetailScreen() {
               onChangeText={setScheduleValue}
               placeholder="e.g., 3 for quarterly"
               keyboardType="number-pad"
-              placeholderTextColor={colors.light.mutedForeground}
+              placeholderTextColor={theme.mutedForeground}
             />
           </View>
         )}
@@ -215,7 +219,7 @@ export default function TaskDetailScreen() {
             value={nextDueDate}
             onChangeText={setNextDueDate}
             placeholder="YYYY-MM-DD"
-            placeholderTextColor={colors.light.mutedForeground}
+            placeholderTextColor={theme.mutedForeground}
           />
         </View>
 
@@ -229,7 +233,7 @@ export default function TaskDetailScreen() {
               onChangeText={setCost}
               placeholder="0.00"
               keyboardType="decimal-pad"
-              placeholderTextColor={colors.light.mutedForeground}
+              placeholderTextColor={theme.mutedForeground}
             />
           </View>
         </View>
@@ -241,7 +245,7 @@ export default function TaskDetailScreen() {
             value={notes}
             onChangeText={setNotes}
             placeholder="Add any notes..."
-            placeholderTextColor={colors.light.mutedForeground}
+            placeholderTextColor={theme.mutedForeground}
             multiline
             numberOfLines={4}
           />
@@ -264,13 +268,13 @@ export default function TaskDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: theme.background,
   },
   loading: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.light.background,
+    backgroundColor: theme.background,
   },
   header: {
     flexDirection: "row",
@@ -278,22 +282,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.light.border,
-    backgroundColor: colors.light.card,
+    borderBottomColor: theme.border,
+    backgroundColor: theme.card,
   },
   headerTitle: {
     fontSize: 17,
-    fontWeight: "600",
-    color: colors.light.foreground,
+    fontFamily: "SpaceGrotesk_600SemiBold",
+    color: theme.foreground,
   },
   cancelButton: {
     fontSize: 17,
-    color: colors.light.mutedForeground,
+    fontFamily: "SpaceGrotesk_400Regular",
+    color: theme.mutedForeground,
   },
   saveButton: {
     fontSize: 17,
-    fontWeight: "600",
-    color: colors.light.primary,
+    fontFamily: "SpaceGrotesk_600SemiBold",
+    color: theme.primary,
   },
   saveButtonDisabled: {
     opacity: 0.5,
@@ -306,9 +311,10 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   error: {
-    color: colors.light.destructive,
+    color: theme.destructive,
     fontSize: 14,
-    backgroundColor: `${colors.light.destructive}15`,
+    fontFamily: "SpaceGrotesk_400Regular",
+    backgroundColor: "rgba(248, 113, 113, 0.1)",
     padding: 12,
     borderRadius: 8,
   },
@@ -317,17 +323,18 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: "600",
-    color: colors.light.foreground,
+    fontFamily: "SpaceGrotesk_600SemiBold",
+    color: theme.foreground,
   },
   input: {
-    backgroundColor: colors.light.card,
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: theme.border,
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: colors.light.foreground,
+    fontFamily: "SpaceGrotesk_400Regular",
+    color: theme.foreground,
   },
   textArea: {
     height: 100,
@@ -339,16 +346,24 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   chip: {
-    backgroundColor: colors.light.card,
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: theme.border,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
   chipSelected: {
-    backgroundColor: `${colors.light.primary}15`,
-    borderColor: colors.light.primary,
+    backgroundColor: "rgba(129, 140, 248, 0.15)",
+    borderColor: theme.primary,
+  },
+  chipText: {
+    fontSize: 14,
+    fontFamily: "SpaceGrotesk_400Regular",
+    color: theme.foreground,
+  },
+  chipTextSelected: {
+    color: theme.primary,
   },
   costInput: {
     flexDirection: "row",
@@ -359,16 +374,17 @@ const styles = StyleSheet.create({
     left: 16,
     zIndex: 1,
     fontSize: 16,
-    color: colors.light.mutedForeground,
+    fontFamily: "SpaceGrotesk_400Regular",
+    color: theme.mutedForeground,
   },
   costField: {
     flex: 1,
     paddingLeft: 32,
   },
   deleteButton: {
-    backgroundColor: colors.light.card,
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: colors.light.destructive,
+    borderColor: theme.destructive,
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
@@ -376,7 +392,7 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: colors.light.destructive,
+    fontFamily: "SpaceGrotesk_600SemiBold",
+    color: theme.destructive,
   },
 });

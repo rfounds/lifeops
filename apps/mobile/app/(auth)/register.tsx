@@ -12,7 +12,7 @@ import {
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/context/AuthContext";
-import { colors } from "../../src/theme/colors";
+import { theme } from "../../src/theme/colors";
 import { Logo } from "../../src/components/Logo";
 import { registerSchema } from "@lifeops/shared";
 
@@ -80,7 +80,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Your name"
-                  placeholderTextColor={colors.light.mutedForeground}
+                  placeholderTextColor={theme.mutedForeground}
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
@@ -93,7 +93,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="you@example.com"
-                  placeholderTextColor={colors.light.mutedForeground}
+                  placeholderTextColor={theme.mutedForeground}
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
@@ -107,7 +107,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Create a password"
-                  placeholderTextColor={colors.light.mutedForeground}
+                  placeholderTextColor={theme.mutedForeground}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={true}
@@ -146,7 +146,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: theme.background,
   },
   keyboardView: {
     flex: 1,
@@ -168,14 +168,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontFamily: "SpaceGrotesk_500Medium",
-    color: colors.light.foreground,
+    color: theme.foreground,
     textAlign: "center",
     marginTop: 8,
   },
   subtitle: {
     fontSize: 14,
     fontFamily: "SpaceGrotesk_400Regular",
-    color: colors.light.mutedForeground,
+    color: theme.mutedForeground,
     textAlign: "center",
     marginTop: 4,
     marginBottom: 24,
@@ -189,21 +189,21 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontFamily: "SpaceGrotesk_500Medium",
-    color: colors.light.foreground,
+    color: theme.foreground,
   },
   input: {
-    backgroundColor: colors.light.background,
+    backgroundColor: theme.card,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: theme.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
     fontFamily: "SpaceGrotesk_400Regular",
-    color: colors.light.foreground,
+    color: theme.foreground,
   },
   button: {
-    backgroundColor: colors.light.foreground,
+    backgroundColor: theme.foreground,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
@@ -213,19 +213,19 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: colors.light.background,
+    color: theme.background,
     fontSize: 16,
     fontFamily: "SpaceGrotesk_500Medium",
   },
   errorContainer: {
-    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    backgroundColor: "rgba(248, 113, 113, 0.1)",
     borderWidth: 1,
-    borderColor: "rgba(239, 68, 68, 0.2)",
+    borderColor: "rgba(248, 113, 113, 0.3)",
     borderRadius: 8,
     padding: 12,
   },
   errorText: {
-    color: colors.light.destructive,
+    color: theme.destructive,
     fontSize: 14,
     fontFamily: "SpaceGrotesk_400Regular",
   },
@@ -235,12 +235,12 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   footerText: {
-    color: colors.light.mutedForeground,
+    color: theme.mutedForeground,
     fontSize: 14,
     fontFamily: "SpaceGrotesk_400Regular",
   },
   link: {
-    color: colors.light.accent,
+    color: theme.accent,
     fontSize: 14,
     fontFamily: "SpaceGrotesk_500Medium",
   },
