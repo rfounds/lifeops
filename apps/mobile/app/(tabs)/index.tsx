@@ -17,6 +17,13 @@ import apiClient from "../../src/api/client";
 import { colors, categoryConfig } from "../../src/theme/colors";
 import { getScheduleDescription, type Task } from "@lifeops/shared";
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 function TaskCard({ task, onComplete }: { task: Task; onComplete: () => void }) {
   const isCompleted = task.lastCompletedDate !== null;
   const today = startOfDay(new Date());
@@ -64,7 +71,7 @@ function TaskCard({ task, onComplete }: { task: Task; onComplete: () => void }) 
         <TouchableOpacity style={styles.cardContent}>
           <View style={styles.cardHeader}>
             <View style={styles.categoryBadge}>
-              <Text>{category.emoji} {category.label}</Text>
+              <Text style={styles.categoryText}>{category.emoji} {category.label}</Text>
             </View>
             <Text style={styles.schedule}>
               {getScheduleDescription(task.scheduleType, task.scheduleValue)}
@@ -128,6 +135,22 @@ export default function DashboardScreen() {
     return daysUntil >= 0 && daysUntil <= 7;
   }).length;
 
+  const getMotivationalMessage = () => {
+    if (overdueCount === 0 && tasks.length > 0) {
+      return "You're all caught up! Great job staying on top of things.";
+    }
+    if (overdueCount === 1) {
+      return "You have 1 task that needs attention.";
+    }
+    if (overdueCount > 1) {
+      return `You have ${overdueCount} tasks that need attention.`;
+    }
+    if (tasks.length === 0) {
+      return "Ready to get organized? Add your first task.";
+    }
+    return `You have ${tasks.length} task${tasks.length === 1 ? "" : "s"} to manage.`;
+  };
+
   if (isLoading && !data) {
     return (
       <View style={styles.loading}>
@@ -139,8 +162,8 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>Hello, {user?.name || "there"}</Text>
-        <Text style={styles.subtitle}>Your life admin tasks</Text>
+        <Text style={styles.greeting}>{getGreeting()}</Text>
+        <Text style={styles.subtitle}>{getMotivationalMessage()}</Text>
       </View>
 
       <View style={styles.stats}>
@@ -211,11 +234,13 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: colors.light.foreground,
+    fontFamily: "SpaceGrotesk_700Bold",
+    color: colors.light.primary,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
+    fontFamily: "SpaceGrotesk_400Regular",
     color: colors.light.mutedForeground,
     marginTop: 4,
   },
@@ -236,11 +261,11 @@ const styles = StyleSheet.create({
   },
   statCardDanger: {
     borderColor: colors.light.destructive,
-    backgroundColor: `${colors.light.destructive}10`,
+    backgroundColor: "rgba(239, 68, 68, 0.06)",
   },
   statValue: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontFamily: "SpaceGrotesk_700Bold",
     color: colors.light.foreground,
   },
   statValueDanger: {
@@ -248,6 +273,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
+    fontFamily: "SpaceGrotesk_400Regular",
     color: colors.light.mutedForeground,
     marginTop: 4,
   },
@@ -263,15 +289,17 @@ const styles = StyleSheet.create({
     borderColor: colors.light.border,
     flexDirection: "row",
     gap: 12,
+    marginBottom: 12,
   },
   completedCard: {
-    backgroundColor: `${colors.light.primary}10`,
+    backgroundColor: "rgba(99, 102, 241, 0.06)",
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: `${colors.light.primary}30`,
+    borderColor: "rgba(99, 102, 241, 0.2)",
     flexDirection: "row",
     gap: 12,
+    marginBottom: 12,
   },
   checkbox: {
     width: 24,
@@ -309,34 +337,42 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
   },
+  categoryText: {
+    fontSize: 12,
+    fontFamily: "SpaceGrotesk_400Regular",
+    color: colors.light.foreground,
+  },
   schedule: {
     color: colors.light.mutedForeground,
     fontSize: 12,
+    fontFamily: "SpaceGrotesk_400Regular",
   },
   title: {
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: "SpaceGrotesk_600SemiBold",
     color: colors.light.foreground,
     marginBottom: 4,
   },
   completedTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: "SpaceGrotesk_600SemiBold",
     color: colors.light.mutedForeground,
     textDecorationLine: "line-through",
   },
   notes: {
     fontSize: 14,
+    fontFamily: "SpaceGrotesk_400Regular",
     color: colors.light.mutedForeground,
     marginBottom: 4,
   },
   meta: {
     fontSize: 12,
+    fontFamily: "SpaceGrotesk_400Regular",
     color: colors.light.mutedForeground,
   },
   dueDate: {
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: "SpaceGrotesk_500Medium",
   },
   empty: {
     alignItems: "center",
@@ -344,18 +380,19 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
+    fontFamily: "SpaceGrotesk_400Regular",
     color: colors.light.mutedForeground,
   },
   emptyButton: {
     marginTop: 12,
-    backgroundColor: colors.light.primary,
+    backgroundColor: colors.light.foreground,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   emptyButtonText: {
-    color: "white",
-    fontWeight: "600",
+    color: colors.light.background,
+    fontFamily: "SpaceGrotesk_500Medium",
   },
   fab: {
     position: "absolute",
@@ -364,19 +401,19 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.light.primary,
+    backgroundColor: colors.light.foreground,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     elevation: 5,
   },
   fabText: {
-    color: "white",
+    color: colors.light.background,
     fontSize: 28,
-    fontWeight: "bold",
+    fontFamily: "SpaceGrotesk_400Regular",
     marginTop: -2,
   },
 });

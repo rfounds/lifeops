@@ -5,9 +5,9 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import * as SecureStore from "expo-secure-store";
 import { router } from "expo-router";
 import apiClient from "../api/client";
+import { storage } from "../lib/storage";
 import type { User } from "@lifeops/shared";
 
 interface AuthContextType {
@@ -27,15 +27,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = useCallback(async () => {
     try {
-      const token = await SecureStore.getItemAsync("accessToken");
+      const token = await storage.getItem("accessToken");
       if (token) {
         const response = await apiClient.get("/auth/me");
         setUser(response.data.user);
       }
     } catch (error) {
       console.error("Auth check failed:", error);
-      await SecureStore.deleteItemAsync("accessToken");
-      await SecureStore.deleteItemAsync("refreshToken");
+      await storage.deleteItem("accessToken");
+      await storage.deleteItem("refreshToken");
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -50,8 +50,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const response = await apiClient.post("/auth/login", { email, password });
     const { user: userData, accessToken, refreshToken } = response.data;
 
-    await SecureStore.setItemAsync("accessToken", accessToken);
-    await SecureStore.setItemAsync("refreshToken", refreshToken);
+    await storage.setItem("accessToken", accessToken);
+    await storage.setItem("refreshToken", refreshToken);
     setUser(userData);
 
     router.replace("/(tabs)");
@@ -65,16 +65,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const { user: userData, accessToken, refreshToken } = response.data;
 
-    await SecureStore.setItemAsync("accessToken", accessToken);
-    await SecureStore.setItemAsync("refreshToken", refreshToken);
+    await storage.setItem("accessToken", accessToken);
+    await storage.setItem("refreshToken", refreshToken);
     setUser(userData);
 
     router.replace("/(tabs)");
   };
 
   const logout = async () => {
-    await SecureStore.deleteItemAsync("accessToken");
-    await SecureStore.deleteItemAsync("refreshToken");
+    await storage.deleteItem("accessToken");
+    await storage.deleteItem("refreshToken");
     setUser(null);
     router.replace("/(auth)/login");
   };

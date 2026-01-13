@@ -101,8 +101,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 12,
+    fontFamily: "SpaceGrotesk_600SemiBold",
     color: colors.light.mutedForeground,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -124,10 +124,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
+    fontFamily: "SpaceGrotesk_400Regular",
     color: colors.light.foreground,
   },
   value: {
     fontSize: 16,
+    fontFamily: "SpaceGrotesk_400Regular",
     color: colors.light.mutedForeground,
   },
   divider: {
@@ -146,40 +148,41 @@ const styles = StyleSheet.create({
   },
   planText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: "SpaceGrotesk_600SemiBold",
     color: colors.light.mutedForeground,
   },
   planTextPro: {
     color: "white",
   },
   upgradeCard: {
-    backgroundColor: `${colors.light.primary}10`,
+    backgroundColor: "rgba(99, 102, 241, 0.06)",
     borderRadius: 12,
     padding: 20,
     borderWidth: 1,
-    borderColor: `${colors.light.primary}30`,
+    borderColor: "rgba(99, 102, 241, 0.2)",
   },
   upgradeTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontFamily: "SpaceGrotesk_600SemiBold",
     color: colors.light.foreground,
     marginBottom: 8,
   },
   upgradeDescription: {
     fontSize: 14,
+    fontFamily: "SpaceGrotesk_400Regular",
     color: colors.light.mutedForeground,
     marginBottom: 16,
   },
   upgradeButton: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: colors.light.foreground,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",
   },
   upgradeButtonText: {
-    color: "white",
+    color: colors.light.background,
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: "SpaceGrotesk_500Medium",
   },
   menuItem: {
     flexDirection: "row",
@@ -189,6 +192,7 @@ const styles = StyleSheet.create({
   },
   menuText: {
     fontSize: 16,
+    fontFamily: "SpaceGrotesk_400Regular",
     color: colors.light.foreground,
   },
   menuArrow: {
@@ -205,11 +209,12 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: "SpaceGrotesk_500Medium",
     color: colors.light.destructive,
   },
   version: {
     textAlign: "center",
+    fontFamily: "SpaceGrotesk_400Regular",
     color: colors.light.mutedForeground,
     fontSize: 12,
     marginTop: 8,

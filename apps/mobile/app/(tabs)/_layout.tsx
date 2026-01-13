@@ -42,7 +42,8 @@ export default function TabLayout() {
         },
         headerTitleStyle: {
           color: colors.light.foreground,
-          fontWeight: "600",
+          fontFamily: "SpaceGrotesk_600SemiBold",
+          fontSize: 17,
         },
       }}
     >
@@ -92,18 +93,19 @@ const styles = StyleSheet.create({
   },
   tabIcon: {
     fontSize: 24,
-    opacity: 0.5,
+    opacity: 0.4,
   },
   tabIconFocused: {
     opacity: 1,
   },
   tabLabel: {
     fontSize: 11,
+    fontFamily: "SpaceGrotesk_400Regular",
     color: colors.light.mutedForeground,
     marginTop: 4,
   },
   tabLabelFocused: {
-    color: colors.light.primary,
-    fontWeight: "600",
+    color: colors.light.foreground,
+    fontFamily: "SpaceGrotesk_500Medium",
   },
 });

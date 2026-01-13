@@ -6,6 +6,13 @@ const JWT_SECRET = process.env.JWT_SECRET || process.env.AUTH_SECRET!;
 const JWT_EXPIRES_IN = "7d";
 const REFRESH_TOKEN_EXPIRES_IN = "30d";
 
+// CORS headers for mobile/web API access
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
 export interface JWTPayload {
   userId: string;
   email: string;
@@ -94,7 +101,7 @@ export function withMobileAuth<T extends Record<string, string>>(
     if (!user) {
       return NextResponse.json(
         { error: "Unauthorized", success: false },
-        { status: 401 }
+        { status: 401, headers: corsHeaders }
       );
     }
 
@@ -106,12 +113,25 @@ export function withMobileAuth<T extends Record<string, string>>(
  * Create a standardized error response
  */
 export function errorResponse(message: string, status: number = 400) {
-  return NextResponse.json({ error: message, success: false }, { status });
+  return NextResponse.json(
+    { error: message, success: false },
+    { status, headers: corsHeaders }
+  );
 }
 
 /**
  * Create a standardized success response
  */
 export function successResponse<T>(data: T, status: number = 200) {
-  return NextResponse.json({ ...data, success: true }, { status });
+  return NextResponse.json(
+    { ...data, success: true },
+    { status, headers: corsHeaders }
+  );
+}
+
+/**
+ * Handle OPTIONS preflight requests
+ */
+export function optionsResponse() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
 }

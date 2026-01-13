@@ -2,7 +2,11 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { loginSchema } from "@lifeops/shared";
 import bcrypt from "bcryptjs";
-import { generateTokens, errorResponse, successResponse } from "@/lib/mobile-auth";
+import { generateTokens, errorResponse, successResponse, optionsResponse } from "@/lib/mobile-auth";
+
+export async function OPTIONS() {
+  return optionsResponse();
+}
 
 export async function POST(request: NextRequest) {
   try {
