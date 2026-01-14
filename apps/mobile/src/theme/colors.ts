@@ -40,14 +40,14 @@ export const colors = {
 // Default to dark theme
 export const theme = colors.dark;
 
-// Category colors and emojis (using dark theme colors)
+// Category colors and emojis (all use accent purple for consistency)
 export const categoryConfig = {
-  FINANCE: { emoji: "💰", label: "Finance", color: theme.success },
-  LEGAL: { emoji: "📋", label: "Legal", color: theme.primary },
-  HOME: { emoji: "🏠", label: "Home", color: theme.warning },
-  HEALTH: { emoji: "🏥", label: "Health", color: theme.destructive },
+  FINANCE: { emoji: "💰", label: "Finance", color: theme.accent },
+  LEGAL: { emoji: "📋", label: "Legal", color: theme.accent },
+  HOME: { emoji: "🏠", label: "Home", color: theme.accent },
+  HEALTH: { emoji: "🏥", label: "Health", color: theme.accent },
   DIGITAL: { emoji: "💻", label: "Digital", color: theme.accent },
-  OTHER: { emoji: "📌", label: "Other", color: theme.mutedForeground },
+  OTHER: { emoji: "📌", label: "Other", color: theme.accent },
 };
 
 // Gradient colors for logo

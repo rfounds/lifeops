@@ -5,8 +5,14 @@ import {
   authenticateRequest,
   errorResponse,
   successResponse,
+  optionsResponse,
 } from "@/lib/mobile-auth";
 import type { Category } from "@lifeops/shared";
+
+// OPTIONS /api/mobile/analytics - Handle CORS preflight
+export async function OPTIONS() {
+  return optionsResponse();
+}
 
 const CATEGORIES: Category[] = ["FINANCE", "LEGAL", "HOME", "HEALTH", "DIGITAL", "OTHER"];
 
@@ -134,21 +140,25 @@ export async function GET(request: NextRequest) {
       .map(([type, count]) => ({ type, count }))
       .sort((a, b) => b.count - a.count);
 
-    // Completion history (last 6 months)
+    // Completion history (last 6 months) - count tasks by their lastCompletedDate
     const completionHistory: { month: string; completions: number }[] = [];
-    const totalCompletions = tasks.reduce(
-      (sum, t) => sum + t.completionCount,
-      0
-    );
 
     for (let i = 5; i >= 0; i--) {
       const monthDate = subMonths(today, i);
       const monthLabel = format(monthDate, "MMM");
-      const estimatedCompletions =
-        i === 0 ? completedThisMonth : Math.round(totalCompletions / 6);
+      const monthStart = startOfMonth(monthDate);
+      const monthEnd = startOfMonth(subMonths(monthDate, -1));
+
+      // Count tasks that were last completed in this month
+      const completionsInMonth = tasks.filter((t) => {
+        if (!t.lastCompletedDate) return false;
+        const completedDate = new Date(t.lastCompletedDate);
+        return completedDate >= monthStart && completedDate < monthEnd;
+      }).length;
+
       completionHistory.push({
         month: monthLabel,
-        completions: Math.max(0, estimatedCompletions),
+        completions: completionsInMonth,
       });
     }
 

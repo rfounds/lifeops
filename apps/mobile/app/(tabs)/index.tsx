@@ -1,20 +1,28 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
   FlatList,
   RefreshControl,
   StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
+  Animated,
+  Platform,
+  Pressable,
 } from "react-native";
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { format, differenceInDays, startOfDay } from "date-fns";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import { useAuth } from "../../src/context/AuthContext";
+import { useToast } from "../../src/context/ToastContext";
 import apiClient from "../../src/api/client";
-import { theme, categoryConfig } from "../../src/theme/colors";
+import { theme, categoryConfig, gradientColors } from "../../src/theme/colors";
+import { Logo } from "../../src/components/Logo";
+import { Button, AnimatedCheckbox, AnimatedFAB } from "../../src/components/ui";
+import { useNotifications } from "../../src/hooks/useNotifications";
 import { getScheduleDescription, type Task } from "@lifeops/shared";
 
 function getGreeting() {
@@ -24,11 +32,26 @@ function getGreeting() {
   return "Good evening";
 }
 
-function TaskCard({ task, onComplete, onUncomplete }: { task: Task; onComplete: () => void; onUncomplete: () => void }) {
+function TaskCard({
+  task,
+  onComplete,
+  onUncomplete,
+  isCompletePending,
+  isUncompletePending,
+}: {
+  task: Task;
+  onComplete: () => void;
+  onUncomplete: () => void;
+  isCompletePending: boolean;
+  isUncompletePending: boolean;
+}) {
   const isCompleted = task.lastCompletedDate !== null;
   const today = startOfDay(new Date());
   const dueDate = startOfDay(new Date(task.nextDueDate));
   const daysUntilDue = differenceInDays(dueDate, today);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const editScaleAnim = useRef(new Animated.Value(1)).current;
+  const undoScaleAnim = useRef(new Animated.Value(1)).current;
 
   const category = categoryConfig[task.category as keyof typeof categoryConfig];
 
@@ -48,37 +71,125 @@ function TaskCard({ task, onComplete, onUncomplete }: { task: Task; onComplete: 
     return dateStr;
   };
 
+  const handlePressIn = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.98,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 4,
+    }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 8,
+    }).start();
+  }, [scaleAnim]);
+
+  const handleEditPressIn = useCallback(() => {
+    Animated.spring(editScaleAnim, {
+      toValue: 0.85,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 4,
+    }).start();
+  }, [editScaleAnim]);
+
+  const handleEditPressOut = useCallback(() => {
+    Animated.spring(editScaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 10,
+    }).start();
+  }, [editScaleAnim]);
+
+  const handleUndoPressIn = useCallback(() => {
+    Animated.spring(undoScaleAnim, {
+      toValue: 0.9,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 4,
+    }).start();
+  }, [undoScaleAnim]);
+
+  const handleUndoPressOut = useCallback(() => {
+    Animated.spring(undoScaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 8,
+    }).start();
+  }, [undoScaleAnim]);
+
+  const handleUndoPress = useCallback(() => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    onUncomplete();
+  }, [onUncomplete]);
+
+  const handleEditPress = useCallback(() => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    router.push(`/task/${task.id}`);
+  }, [task.id]);
+
   if (isCompleted) {
     return (
-      <View style={styles.completedCard}>
-        <View style={styles.checkCircle}>
-          <Text style={styles.checkmark}>✓</Text>
-        </View>
+      <Animated.View style={[styles.completedCard, { transform: [{ scale: scaleAnim }] }]}>
+        <AnimatedCheckbox
+          checked={true}
+          onPress={onUncomplete}
+          loading={isUncompletePending}
+        />
         <View style={styles.cardContent}>
           <Text style={styles.completedTitle}>{task.title}</Text>
           <Text style={styles.meta}>
             {getScheduleDescription(task.scheduleType, task.scheduleValue)}
           </Text>
         </View>
-        <TouchableOpacity style={styles.undoButton} onPress={onUncomplete}>
-          <Text style={styles.undoText}>Undo</Text>
-        </TouchableOpacity>
-      </View>
+        <Pressable
+          onPress={handleUndoPress}
+          onPressIn={handleUndoPressIn}
+          onPressOut={handleUndoPressOut}
+          disabled={isUncompletePending}
+        >
+          <Animated.View style={[styles.undoButton, { transform: [{ scale: undoScaleAnim }] }]}>
+            {isUncompletePending ? (
+              <ActivityIndicator size="small" color={theme.foreground} />
+            ) : (
+              <Text style={styles.undoText}>Undo</Text>
+            )}
+          </Animated.View>
+        </Pressable>
+      </Animated.View>
     );
   }
 
   return (
-    <View style={styles.card}>
-      <TouchableOpacity style={styles.checkbox} onPress={onComplete} />
-      <Link href={`/task/${task.id}`} asChild>
-        <TouchableOpacity style={styles.cardContent}>
+    <Pressable
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={isCompletePending}
+    >
+      <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
+        <AnimatedCheckbox
+          checked={false}
+          onPress={onComplete}
+          loading={isCompletePending}
+        />
+        <View style={styles.cardContent}>
           <View style={styles.cardHeader}>
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{category.emoji} {category.label}</Text>
+            <View style={[styles.categoryBadge, { backgroundColor: "rgba(192, 132, 252, 0.15)" }]}>
+              <Text style={[styles.categoryText, { color: theme.accent }]}>
+                {category.emoji} {category.label}
+              </Text>
             </View>
-            <Text style={styles.schedule}>
-              {getScheduleDescription(task.scheduleType, task.scheduleValue)}
-            </Text>
           </View>
           <Text style={styles.title}>{task.title}</Text>
           {task.notes && (
@@ -86,19 +197,65 @@ function TaskCard({ task, onComplete, onUncomplete }: { task: Task; onComplete: 
               {task.notes}
             </Text>
           )}
-          <Text style={[styles.dueDate, { color: getDueStatusColor() }]}>
-            {getDueText()}
-          </Text>
-        </TouchableOpacity>
-      </Link>
+          <View style={styles.taskFooter}>
+            <Text style={[styles.dueDate, { color: getDueStatusColor() }]}>
+              {getDueText()}
+            </Text>
+            <Text style={styles.schedule}>
+              {getScheduleDescription(task.scheduleType, task.scheduleValue)}
+            </Text>
+          </View>
+        </View>
+        <Pressable
+          onPress={handleEditPress}
+          onPressIn={handleEditPressIn}
+          onPressOut={handleEditPressOut}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Animated.View style={[styles.editIconContainer, { transform: [{ scale: editScaleAnim }] }]}>
+            <Text style={styles.editIcon}>✎</Text>
+          </Animated.View>
+        </Pressable>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+function EmptyState() {
+  return (
+    <View style={styles.emptyState}>
+      <View style={styles.emptyIconContainer}>
+        <Text style={styles.emptyIcon}>📋</Text>
+      </View>
+      <Text style={styles.emptyTitle}>No tasks yet</Text>
+      <Text style={styles.emptySubtitle}>
+        Start tracking your life admin by adding your first task
+      </Text>
+      <View style={styles.emptyButtonContainer}>
+        <Link href="/task/new" asChild>
+          <Button onPress={() => {}}>Add your first task</Button>
+        </Link>
+      </View>
     </View>
   );
 }
 
 export default function DashboardScreen() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingTaskId, setPendingTaskId] = useState<string | null>(null);
+  const {
+    scheduleNotificationsForTasks,
+    cancelNotificationForTask,
+    initializeNotifications,
+  } = useNotifications();
+
+  // Initialize notifications on mount
+  useEffect(() => {
+    initializeNotifications();
+  }, [initializeNotifications]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["tasks"],
@@ -108,21 +265,45 @@ export default function DashboardScreen() {
     },
   });
 
+  // Schedule notifications when tasks are fetched
+  useEffect(() => {
+    if (data && data.length > 0) {
+      scheduleNotificationsForTasks(data);
+    }
+  }, [data, scheduleNotificationsForTasks]);
+
   const completeMutation = useMutation({
     mutationFn: async (taskId: string) => {
+      setPendingTaskId(taskId);
       await apiClient.post(`/tasks/${taskId}/complete`);
     },
-    onSuccess: () => {
+    onSuccess: async (_, taskId) => {
+      // Cancel the notification for this task
+      await cancelNotificationForTask(taskId);
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      const task = data?.find((t) => t.id === taskId);
+      showToast(`"${task?.title}" marked complete`, "success");
+      setPendingTaskId(null);
+    },
+    onError: () => {
+      showToast("Failed to complete task", "error");
+      setPendingTaskId(null);
     },
   });
 
   const uncompleteMutation = useMutation({
     mutationFn: async (taskId: string) => {
+      setPendingTaskId(taskId);
       await apiClient.post(`/tasks/${taskId}/uncomplete`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      showToast("Task marked incomplete", "info");
+      setPendingTaskId(null);
+    },
+    onError: () => {
+      showToast("Failed to undo completion", "error");
+      setPendingTaskId(null);
     },
   });
 
@@ -173,11 +354,29 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
-      <View style={styles.header}>
+      {/* Header */}
+      <View style={styles.headerContainer}>
+        <View style={styles.headerTop}>
+          <Logo size="sm" />
+          <View style={styles.headerUser}>
+            <Text style={styles.userName}>{user?.name?.split(" ")[0]}</Text>
+            {user?.plan === "PRO" && (
+              <LinearGradient
+                colors={[gradientColors.primary, gradientColors.accent]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.proBadge}
+              >
+                <Text style={styles.proBadgeText}>PRO</Text>
+              </LinearGradient>
+            )}
+          </View>
+        </View>
         <Text style={styles.greeting}>{getGreeting()}</Text>
         <Text style={styles.subtitle}>{getMotivationalMessage()}</Text>
       </View>
 
+      {/* Stats */}
       <View style={styles.stats}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{pendingTasks.length}</Text>
@@ -195,6 +394,7 @@ export default function DashboardScreen() {
         </View>
       </View>
 
+      {/* Task List */}
       <FlatList
         data={[...pendingTasks, ...completedTasks]}
         keyExtractor={(item) => item.id}
@@ -203,6 +403,8 @@ export default function DashboardScreen() {
             task={item}
             onComplete={() => completeMutation.mutate(item.id)}
             onUncomplete={() => uncompleteMutation.mutate(item.id)}
+            isCompletePending={pendingTaskId === item.id && completeMutation.isPending}
+            isUncompletePending={pendingTaskId === item.id && uncompleteMutation.isPending}
           />
         )}
         refreshControl={
@@ -212,24 +414,15 @@ export default function DashboardScreen() {
             tintColor={theme.primary}
           />
         }
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>No tasks yet</Text>
-            <Link href="/task/new" asChild>
-              <TouchableOpacity style={styles.emptyButton}>
-                <Text style={styles.emptyButtonText}>Add your first task</Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
-        }
+        contentContainerStyle={[
+          styles.list,
+          tasks.length === 0 && styles.listEmpty,
+        ]}
+        ListEmptyComponent={<EmptyState />}
       />
 
-      <Link href="/task/new" asChild>
-        <TouchableOpacity style={styles.fab}>
-          <Text style={styles.fabText}>+</Text>
-        </TouchableOpacity>
-      </Link>
+      {/* FAB */}
+      <AnimatedFAB href="/task/new" />
     </SafeAreaView>
   );
 }
@@ -245,14 +438,40 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: theme.background,
   },
-  header: {
+  headerContainer: {
     padding: 20,
     paddingTop: 8,
+  },
+  headerTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  headerUser: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  userName: {
+    fontSize: 14,
+    fontFamily: "SpaceGrotesk_500Medium",
+    color: theme.mutedForeground,
+  },
+  proBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  proBadgeText: {
+    fontSize: 10,
+    fontFamily: "SpaceGrotesk_700Bold",
+    color: "#FFFFFF",
   },
   greeting: {
     fontSize: 28,
     fontFamily: "SpaceGrotesk_700Bold",
-    color: theme.primary,
+    color: theme.foreground,
     letterSpacing: -0.5,
   },
   subtitle: {
@@ -296,7 +515,10 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 16,
-    gap: 12,
+    paddingBottom: 90,
+  },
+  listEmpty: {
+    flex: 1,
   },
   card: {
     backgroundColor: theme.card,
@@ -309,36 +531,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   completedCard: {
-    backgroundColor: "rgba(129, 140, 248, 0.1)",
+    backgroundColor: "rgba(129, 140, 248, 0.08)",
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "rgba(129, 140, 248, 0.3)",
+    borderColor: "rgba(129, 140, 248, 0.2)",
     flexDirection: "row",
     gap: 12,
     marginBottom: 12,
     alignItems: "center",
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: theme.border,
-    marginTop: 2,
-  },
-  checkCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: theme.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkmark: {
-    color: theme.primaryForeground,
-    fontSize: 14,
-    fontWeight: "bold",
   },
   cardContent: {
     flex: 1,
@@ -347,18 +548,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 8,
   },
   categoryBadge: {
-    backgroundColor: theme.muted,
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: 6,
   },
   categoryText: {
     fontSize: 12,
-    fontFamily: "SpaceGrotesk_400Regular",
-    color: theme.foreground,
+    fontFamily: "SpaceGrotesk_500Medium",
   },
   schedule: {
     color: theme.mutedForeground,
@@ -373,7 +572,7 @@ const styles = StyleSheet.create({
   },
   completedTitle: {
     fontSize: 16,
-    fontFamily: "SpaceGrotesk_600SemiBold",
+    fontFamily: "SpaceGrotesk_500Medium",
     color: theme.mutedForeground,
     textDecorationLine: "line-through",
   },
@@ -381,15 +580,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "SpaceGrotesk_400Regular",
     color: theme.mutedForeground,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   meta: {
     fontSize: 12,
     fontFamily: "SpaceGrotesk_400Regular",
     color: theme.mutedForeground,
   },
+  taskFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 4,
+  },
   dueDate: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: "SpaceGrotesk_500Medium",
   },
   undoButton: {
@@ -397,52 +602,60 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     backgroundColor: theme.muted,
+    minWidth: 50,
+    alignItems: "center",
   },
   undoText: {
     fontSize: 12,
     fontFamily: "SpaceGrotesk_500Medium",
     color: theme.foreground,
   },
-  empty: {
-    alignItems: "center",
-    padding: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontFamily: "SpaceGrotesk_400Regular",
-    color: theme.mutedForeground,
-  },
-  emptyButton: {
-    marginTop: 12,
-    backgroundColor: theme.foreground,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+  editIconContainer: {
+    width: 32,
+    height: 32,
     borderRadius: 8,
-  },
-  emptyButtonText: {
-    color: theme.background,
-    fontFamily: "SpaceGrotesk_500Medium",
-  },
-  fab: {
-    position: "absolute",
-    right: 20,
-    bottom: 100,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.primary,
+    backgroundColor: theme.muted,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
   },
-  fabText: {
-    color: theme.primaryForeground,
-    fontSize: 28,
+  editIcon: {
+    fontSize: 16,
+    color: theme.mutedForeground,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: theme.muted,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  emptyIcon: {
+    fontSize: 36,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontFamily: "SpaceGrotesk_600SemiBold",
+    color: theme.foreground,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
     fontFamily: "SpaceGrotesk_400Regular",
-    marginTop: -2,
+    color: theme.mutedForeground,
+    textAlign: "center",
+    paddingHorizontal: 40,
+    marginBottom: 24,
+  },
+  emptyButtonContainer: {
+    width: "100%",
+    paddingHorizontal: 40,
   },
 });

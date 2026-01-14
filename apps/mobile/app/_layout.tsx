@@ -12,6 +12,7 @@ import {
   SpaceGrotesk_700Bold,
 } from "@expo-google-fonts/space-grotesk";
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
+import { ToastProvider } from "../src/context/ToastContext";
 import { theme } from "../src/theme/colors";
 
 const queryClient = new QueryClient({
@@ -71,8 +72,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <StatusBar style="light" />
-          <RootLayoutNav />
+          <ToastProvider>
+            <StatusBar style="light" />
+            <RootLayoutNav />
+          </ToastProvider>
         </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>

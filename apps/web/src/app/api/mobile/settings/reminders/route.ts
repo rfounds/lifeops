@@ -5,7 +5,13 @@ import {
   authenticateRequest,
   errorResponse,
   successResponse,
+  optionsResponse,
 } from "@/lib/mobile-auth";
+
+// OPTIONS /api/mobile/settings/reminders - Handle CORS preflight
+export async function OPTIONS() {
+  return optionsResponse();
+}
 
 const reminderSettingsSchema = z.object({
   emailReminders: z.boolean(),

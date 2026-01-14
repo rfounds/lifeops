@@ -1,5 +1,9 @@
 import { NextRequest } from "next/server";
-import { authenticateRequest, errorResponse, successResponse } from "@/lib/mobile-auth";
+import { authenticateRequest, errorResponse, successResponse, optionsResponse } from "@/lib/mobile-auth";
+
+export async function OPTIONS() {
+  return optionsResponse();
+}
 
 export async function GET(request: NextRequest) {
   try {

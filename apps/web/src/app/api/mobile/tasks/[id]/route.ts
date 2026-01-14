@@ -5,9 +5,15 @@ import {
   authenticateRequest,
   errorResponse,
   successResponse,
+  optionsResponse,
 } from "@/lib/mobile-auth";
 
 type RouteParams = { params: Promise<{ id: string }> };
+
+// OPTIONS /api/mobile/tasks/[id] - Handle CORS preflight
+export async function OPTIONS() {
+  return optionsResponse();
+}
 
 // GET /api/mobile/tasks/[id] - Get single task
 export async function GET(request: NextRequest, { params }: RouteParams) {

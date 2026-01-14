@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -12,16 +11,20 @@ import {
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/context/AuthContext";
+import { useToast } from "../../src/context/ToastContext";
 import { theme } from "../../src/theme/colors";
 import { Logo } from "../../src/components/Logo";
+import { Button } from "../../src/components/ui";
 import { loginSchema } from "@lifeops/shared";
 
 export default function LoginScreen() {
   const { login } = useAuth();
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const handleLogin = async () => {
     setError("");
@@ -35,6 +38,7 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await login(email, password);
+      showToast("Welcome back!", "success");
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Login failed. Please try again.";
@@ -75,7 +79,10 @@ export default function LoginScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Email</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    focusedField === "email" && styles.inputFocused,
+                  ]}
                   placeholder="you@example.com"
                   placeholderTextColor={theme.mutedForeground}
                   value={email}
@@ -83,41 +90,46 @@ export default function LoginScreen() {
                   autoCapitalize="none"
                   keyboardType="email-address"
                   autoComplete="email"
+                  onFocus={() => setFocusedField("email")}
+                  onBlur={() => setFocusedField(null)}
                 />
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Password</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    focusedField === "password" && styles.inputFocused,
+                  ]}
                   placeholder="Your password"
                   placeholderTextColor={theme.mutedForeground}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={true}
                   autoComplete="password"
+                  onFocus={() => setFocusedField("password")}
+                  onBlur={() => setFocusedField(null)}
                 />
               </View>
 
-              <TouchableOpacity
-                style={[styles.button, isLoading && styles.buttonDisabled]}
-                onPress={handleLogin}
-                disabled={isLoading}
-                activeOpacity={0.9}
-              >
-                <Text style={styles.buttonText}>
-                  {isLoading ? "Signing in..." : "Sign in"}
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.buttonContainer}>
+                <Button
+                  onPress={handleLogin}
+                  loading={isLoading}
+                  disabled={isLoading}
+                  fullWidth
+                >
+                  Sign in
+                </Button>
+              </View>
             </View>
 
             {/* Footer */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don't have an account? </Text>
-              <Link href="/(auth)/register" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.link}>Sign up</Text>
-                </TouchableOpacity>
+              <Link href="/(auth)/register">
+                <Text style={styles.link}>Sign up</Text>
               </Link>
             </View>
           </View>
@@ -150,8 +162,8 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   title: {
-    fontSize: 20,
-    fontFamily: "SpaceGrotesk_500Medium",
+    fontSize: 24,
+    fontFamily: "SpaceGrotesk_700Bold",
     color: theme.foreground,
     textAlign: "center",
     marginTop: 8,
@@ -162,13 +174,13 @@ const styles = StyleSheet.create({
     color: theme.mutedForeground,
     textAlign: "center",
     marginTop: 4,
-    marginBottom: 24,
+    marginBottom: 32,
   },
   form: {
-    gap: 16,
+    gap: 20,
   },
   inputGroup: {
-    gap: 6,
+    gap: 8,
   },
   label: {
     fontSize: 14,
@@ -179,33 +191,24 @@ const styles = StyleSheet.create({
     backgroundColor: theme.card,
     borderWidth: 1,
     borderColor: theme.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     fontSize: 16,
     fontFamily: "SpaceGrotesk_400Regular",
     color: theme.foreground,
   },
-  button: {
-    backgroundColor: theme.foreground,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
+  inputFocused: {
+    borderColor: theme.primary,
+  },
+  buttonContainer: {
     marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: theme.background,
-    fontSize: 16,
-    fontFamily: "SpaceGrotesk_500Medium",
   },
   errorContainer: {
     backgroundColor: "rgba(248, 113, 113, 0.1)",
     borderWidth: 1,
     borderColor: "rgba(248, 113, 113, 0.3)",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
   },
   errorText: {
@@ -216,7 +219,7 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 24,
+    marginTop: 32,
   },
   footerText: {
     color: theme.mutedForeground,
@@ -224,7 +227,7 @@ const styles = StyleSheet.create({
     fontFamily: "SpaceGrotesk_400Regular",
   },
   link: {
-    color: theme.accent,
+    color: theme.primary,
     fontSize: 14,
     fontFamily: "SpaceGrotesk_500Medium",
   },

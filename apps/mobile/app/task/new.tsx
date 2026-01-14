@@ -12,21 +12,25 @@ import {
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { parse, format } from "date-fns";
 import apiClient from "../../src/api/client";
+import { useToast } from "../../src/context/ToastContext";
 import { theme } from "../../src/theme/colors";
+import { Button, DatePicker } from "../../src/components/ui";
 import { CATEGORIES, SCHEDULE_TYPES, type Category, type ScheduleType } from "@lifeops/shared";
 
 export default function NewTaskScreen() {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Category>("OTHER");
   const [scheduleType, setScheduleType] = useState<ScheduleType>("FIXED_DATE");
   const [scheduleValue, setScheduleValue] = useState("");
-  const [nextDueDate, setNextDueDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [nextDueDate, setNextDueDate] = useState(new Date());
   const [notes, setNotes] = useState("");
   const [cost, setCost] = useState("");
   const [error, setError] = useState("");
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
@@ -35,10 +39,12 @@ export default function NewTaskScreen() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      showToast("Task created successfully", "success");
       router.back();
     },
     onError: (err: Error) => {
       setError(err.message || "Failed to create task");
+      showToast("Failed to create task", "error");
     },
   });
 
@@ -48,12 +54,17 @@ export default function NewTaskScreen() {
       return;
     }
 
+    if (scheduleType === "EVERY_N_MONTHS" && !scheduleValue) {
+      setError("Please specify how often this task repeats");
+      return;
+    }
+
     const data: Record<string, unknown> = {
       title: title.trim(),
       category,
       scheduleType,
       scheduleValue: scheduleValue ? parseInt(scheduleValue) : null,
-      nextDueDate,
+      nextDueDate: format(nextDueDate, "yyyy-MM-dd"),
       notes: notes.trim() || null,
       cost: cost ? parseFloat(cost) : null,
     };
@@ -68,36 +79,44 @@ export default function NewTaskScreen() {
         style={styles.keyboardView}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/');
+              }
+            }}
+            style={styles.cancelTouchable}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.6}
+          >
             <Text style={styles.cancelButton}>Cancel</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>New Task</Text>
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={createMutation.isPending}
-          >
-            <Text
-              style={[
-                styles.saveButton,
-                createMutation.isPending && styles.saveButtonDisabled,
-              ]}
-            >
-              {createMutation.isPending ? "Saving..." : "Save"}
-            </Text>
-          </TouchableOpacity>
+          <View style={{ width: 60 }} />
         </View>
 
         <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.error}>{error}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.field}>
             <Text style={styles.label}>Title</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                focusedField === "title" && styles.inputFocused,
+              ]}
               value={title}
               onChangeText={setTitle}
-              placeholder="Task title"
+              placeholder="What needs to be done?"
               placeholderTextColor={theme.mutedForeground}
+              onFocus={() => setFocusedField("title")}
+              onBlur={() => setFocusedField(null)}
             />
           </View>
 
@@ -105,20 +124,28 @@ export default function NewTaskScreen() {
             <Text style={styles.label}>Category</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.chipRow}>
-                {CATEGORIES.map((cat) => (
-                  <TouchableOpacity
-                    key={cat.value}
-                    style={[
-                      styles.chip,
-                      category === cat.value && styles.chipSelected,
-                    ]}
-                    onPress={() => setCategory(cat.value)}
-                  >
-                    <Text style={[styles.chipText, category === cat.value && styles.chipTextSelected]}>
-                      {cat.emoji} {cat.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                {CATEGORIES.map((cat) => {
+                  const isSelected = category === cat.value;
+                  return (
+                    <TouchableOpacity
+                      key={cat.value}
+                      style={[
+                        styles.chip,
+                        isSelected && styles.categoryChipSelected,
+                      ]}
+                      onPress={() => setCategory(cat.value)}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          isSelected && styles.categoryChipTextSelected,
+                        ]}
+                      >
+                        {cat.emoji} {cat.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </ScrollView>
           </View>
@@ -145,55 +172,83 @@ export default function NewTaskScreen() {
 
           {scheduleType === "EVERY_N_MONTHS" && (
             <View style={styles.field}>
-              <Text style={styles.label}>Every N Months</Text>
-              <TextInput
-                style={styles.input}
-                value={scheduleValue}
-                onChangeText={setScheduleValue}
-                placeholder="e.g., 3 for quarterly"
-                keyboardType="number-pad"
-                placeholderTextColor={theme.mutedForeground}
-              />
+              <Text style={styles.label}>Repeat Every</Text>
+              <View style={styles.repeatRow}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    styles.repeatInput,
+                    focusedField === "scheduleValue" && styles.inputFocused,
+                  ]}
+                  value={scheduleValue}
+                  onChangeText={setScheduleValue}
+                  placeholder="3"
+                  keyboardType="number-pad"
+                  placeholderTextColor={theme.mutedForeground}
+                  onFocus={() => setFocusedField("scheduleValue")}
+                  onBlur={() => setFocusedField(null)}
+                />
+                <Text style={styles.repeatLabel}>months</Text>
+              </View>
             </View>
           )}
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Due Date</Text>
-            <TextInput
-              style={styles.input}
-              value={nextDueDate}
-              onChangeText={setNextDueDate}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={theme.mutedForeground}
-            />
-          </View>
+          <DatePicker
+            label="Due Date"
+            value={nextDueDate}
+            onChange={setNextDueDate}
+          />
 
           <View style={styles.field}>
             <Text style={styles.label}>Cost (optional)</Text>
             <View style={styles.costInput}>
               <Text style={styles.costPrefix}>$</Text>
               <TextInput
-                style={[styles.input, styles.costField]}
+                style={[
+                  styles.input,
+                  styles.costField,
+                  focusedField === "cost" && styles.inputFocused,
+                ]}
                 value={cost}
                 onChangeText={setCost}
                 placeholder="0.00"
                 keyboardType="decimal-pad"
                 placeholderTextColor={theme.mutedForeground}
+                onFocus={() => setFocusedField("cost")}
+                onBlur={() => setFocusedField(null)}
               />
             </View>
+            <Text style={styles.hint}>Track annual cost for budgeting</Text>
           </View>
 
           <View style={styles.field}>
             <Text style={styles.label}>Notes (optional)</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[
+                styles.input,
+                styles.textArea,
+                focusedField === "notes" && styles.inputFocused,
+              ]}
               value={notes}
               onChangeText={setNotes}
-              placeholder="Add any notes..."
+              placeholder="Add any details, links, or reminders..."
               placeholderTextColor={theme.mutedForeground}
               multiline
               numberOfLines={4}
+              onFocus={() => setFocusedField("notes")}
+              onBlur={() => setFocusedField(null)}
             />
+          </View>
+
+          <View style={styles.submitButton}>
+            <Button
+              onPress={handleSubmit}
+              loading={createMutation.isPending}
+              disabled={createMutation.isPending}
+              fullWidth
+            >
+              Create Task
+            </Button>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -223,33 +278,32 @@ const styles = StyleSheet.create({
     fontFamily: "SpaceGrotesk_600SemiBold",
     color: theme.foreground,
   },
+  cancelTouchable: {
+    padding: 4,
+  },
   cancelButton: {
     fontSize: 17,
     fontFamily: "SpaceGrotesk_400Regular",
     color: theme.mutedForeground,
-  },
-  saveButton: {
-    fontSize: 17,
-    fontFamily: "SpaceGrotesk_600SemiBold",
-    color: theme.primary,
-  },
-  saveButtonDisabled: {
-    opacity: 0.5,
   },
   form: {
     flex: 1,
   },
   formContent: {
     padding: 16,
-    gap: 20,
+    gap: 24,
+  },
+  errorContainer: {
+    backgroundColor: "rgba(248, 113, 113, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(248, 113, 113, 0.3)",
+    borderRadius: 10,
+    padding: 12,
   },
   error: {
     color: theme.destructive,
     fontSize: 14,
     fontFamily: "SpaceGrotesk_400Regular",
-    backgroundColor: "rgba(248, 113, 113, 0.1)",
-    padding: 12,
-    borderRadius: 8,
   },
   field: {
     gap: 8,
@@ -258,6 +312,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "SpaceGrotesk_600SemiBold",
     color: theme.foreground,
+  },
+  hint: {
+    fontSize: 12,
+    fontFamily: "SpaceGrotesk_400Regular",
+    color: theme.mutedForeground,
   },
   input: {
     backgroundColor: theme.card,
@@ -268,6 +327,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "SpaceGrotesk_400Regular",
     color: theme.foreground,
+  },
+  inputFocused: {
+    borderColor: theme.primary,
   },
   textArea: {
     height: 100,
@@ -290,6 +352,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(129, 140, 248, 0.15)",
     borderColor: theme.primary,
   },
+  categoryChipSelected: {
+    backgroundColor: theme.accent,
+    borderColor: theme.accent,
+  },
   chipText: {
     fontSize: 14,
     fontFamily: "SpaceGrotesk_400Regular",
@@ -297,6 +363,25 @@ const styles = StyleSheet.create({
   },
   chipTextSelected: {
     color: theme.primary,
+    fontFamily: "SpaceGrotesk_500Medium",
+  },
+  categoryChipTextSelected: {
+    color: theme.background,
+    fontFamily: "SpaceGrotesk_500Medium",
+  },
+  repeatRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  repeatInput: {
+    width: 80,
+    textAlign: "center",
+  },
+  repeatLabel: {
+    fontSize: 16,
+    fontFamily: "SpaceGrotesk_400Regular",
+    color: theme.mutedForeground,
   },
   costInput: {
     flexDirection: "row",
@@ -313,5 +398,9 @@ const styles = StyleSheet.create({
   costField: {
     flex: 1,
     paddingLeft: 32,
+  },
+  submitButton: {
+    marginTop: 8,
+    paddingBottom: 32,
   },
 });

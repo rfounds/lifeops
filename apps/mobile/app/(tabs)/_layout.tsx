@@ -2,21 +2,20 @@ import { Tabs } from "expo-router";
 import { View, Text, StyleSheet } from "react-native";
 import { theme } from "../../src/theme/colors";
 import { useAuth } from "../../src/context/AuthContext";
+import { HomeIcon, AnalyticsIcon, SettingsIcon } from "../../src/components/icons/TabIcons";
 
 function TabIcon({
-  icon,
+  icon: Icon,
   focused,
   label,
 }: {
-  icon: string;
+  icon: React.ComponentType<{ focused: boolean; size: number }>;
   focused: boolean;
   label: string;
 }) {
   return (
     <View style={styles.tabItem}>
-      <Text style={[styles.tabIcon, focused && styles.tabIconFocused]}>
-        {icon}
-      </Text>
+      <Icon focused={focused} size={22} />
       <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>
         {label}
       </Text>
@@ -51,8 +50,9 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Dashboard",
+          headerShown: false,
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="🏠" focused={focused} label="Home" />
+            <TabIcon icon={HomeIcon} focused={focused} label="Home" />
           ),
         }}
       />
@@ -62,7 +62,7 @@ export default function TabLayout() {
           title: "Analytics",
           href: isPro ? "/analytics" : null,
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="📊" focused={focused} label="Analytics" />
+            <TabIcon icon={AnalyticsIcon} focused={focused} label="Analytics" />
           ),
         }}
       />
@@ -71,7 +71,7 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="⚙️" focused={focused} label="Settings" />
+            <TabIcon icon={SettingsIcon} focused={focused} label="Settings" />
           ),
         }}
       />
@@ -84,28 +84,22 @@ const styles = StyleSheet.create({
     backgroundColor: theme.card,
     borderTopWidth: 1,
     borderTopColor: theme.border,
-    height: 80,
+    height: 70,
     paddingTop: 8,
+    paddingBottom: 8,
   },
   tabItem: {
     alignItems: "center",
     justifyContent: "center",
-  },
-  tabIcon: {
-    fontSize: 24,
-    opacity: 0.4,
-  },
-  tabIconFocused: {
-    opacity: 1,
+    gap: 4,
   },
   tabLabel: {
     fontSize: 11,
     fontFamily: "SpaceGrotesk_400Regular",
     color: theme.mutedForeground,
-    marginTop: 4,
   },
   tabLabelFocused: {
-    color: theme.foreground,
+    color: theme.primary,
     fontFamily: "SpaceGrotesk_500Medium",
   },
 });

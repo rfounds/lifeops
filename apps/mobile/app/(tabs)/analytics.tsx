@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { useState, useCallback } from "react";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import apiClient from "../../src/api/client";
 import { theme, categoryConfig } from "../../src/theme/colors";
+import { Button } from "../../src/components/ui";
 import type { AnalyticsData } from "@lifeops/shared";
 
 function ScoreRing({ score }: { score: number }) {
@@ -64,7 +66,10 @@ function StatCard({
 }
 
 export default function AnalyticsScreen() {
-  const { data, isLoading, error } = useQuery({
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["analytics"],
     queryFn: async () => {
       const response = await apiClient.get("/analytics");
@@ -72,7 +77,13 @@ export default function AnalyticsScreen() {
     },
   });
 
-  if (isLoading) {
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
+
+  if (isLoading && !data) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={theme.primary} />
@@ -82,9 +93,19 @@ export default function AnalyticsScreen() {
 
   if (error || !data) {
     return (
-      <View style={styles.loading}>
-        <Text style={styles.errorText}>Failed to load analytics</Text>
-        <Text style={styles.errorSubtext}>Make sure you have a Pro subscription</Text>
+      <View style={styles.errorState}>
+        <View style={styles.errorIconContainer}>
+          <Text style={styles.errorIcon}>📊</Text>
+        </View>
+        <Text style={styles.errorTitle}>Analytics Unavailable</Text>
+        <Text style={styles.errorSubtext}>
+          Analytics is a Pro feature. Upgrade to unlock detailed insights about your life admin.
+        </Text>
+        <View style={styles.errorButtonContainer}>
+          <Button onPress={() => refetch()} variant="outline">
+            Try Again
+          </Button>
+        </View>
       </View>
     );
   }
@@ -103,7 +124,16 @@ export default function AnalyticsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.primary}
+          />
+        }
+      >
         {/* Life Admin Score */}
         <View style={styles.scoreSection}>
           <ScoreRing score={data.lifeAdminScore} />
@@ -223,16 +253,42 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: theme.background,
   },
-  errorText: {
-    color: theme.destructive,
-    fontSize: 16,
+  errorState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: theme.background,
+    paddingHorizontal: 40,
+  },
+  errorIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: theme.muted,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  errorIcon: {
+    fontSize: 36,
+  },
+  errorTitle: {
+    fontSize: 20,
     fontFamily: "SpaceGrotesk_600SemiBold",
+    color: theme.foreground,
+    marginBottom: 8,
+    textAlign: "center",
   },
   errorSubtext: {
     color: theme.mutedForeground,
     fontSize: 14,
     fontFamily: "SpaceGrotesk_400Regular",
-    marginTop: 8,
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  errorButtonContainer: {
+    width: "100%",
   },
   content: {
     padding: 16,

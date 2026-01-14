@@ -1,14 +1,36 @@
+import { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { useAuth } from "../../src/context/AuthContext";
-import { theme } from "../../src/theme/colors";
+import { useToast } from "../../src/context/ToastContext";
+import { theme, gradientColors } from "../../src/theme/colors";
+import { Button, ConfirmDialog } from "../../src/components/ui";
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
+  const { showToast } = useToast();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
+  const handleLogout = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const confirmLogout = async () => {
+    setShowLogoutDialog(false);
+    await logout();
+    showToast("Signed out successfully", "info");
+  };
+
+  const handleUpgrade = () => {
+    showToast("Upgrade coming soon!", "info");
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <ScrollView contentContainerStyle={styles.content}>
+        {/* Account Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
@@ -24,67 +46,117 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
             <View style={styles.row}>
               <Text style={styles.label}>Plan</Text>
-              <View
-                style={[
-                  styles.planBadge,
-                  user?.plan === "PRO" && styles.planBadgePro,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.planText,
-                    user?.plan === "PRO" && styles.planTextPro,
-                  ]}
+              {user?.plan === "PRO" ? (
+                <LinearGradient
+                  colors={[gradientColors.primary, gradientColors.accent]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.planBadgePro}
                 >
-                  {user?.plan}
-                </Text>
-              </View>
+                  <Text style={styles.planTextPro}>PRO</Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.planBadge}>
+                  <Text style={styles.planText}>FREE</Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
 
+        {/* Upgrade Banner */}
         {user?.plan !== "PRO" && (
           <View style={styles.section}>
-            <View style={styles.upgradeCard}>
-              <Text style={styles.upgradeTitle}>Upgrade to Pro</Text>
-              <Text style={styles.upgradeDescription}>
-                Get unlimited tasks, analytics, household sharing, and more.
-              </Text>
-              <TouchableOpacity style={styles.upgradeButton}>
-                <Text style={styles.upgradeButtonText}>Upgrade Now</Text>
-              </TouchableOpacity>
-            </View>
+            <LinearGradient
+              colors={["rgba(129, 140, 248, 0.15)", "rgba(192, 132, 252, 0.15)"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.upgradeCard}
+            >
+              <View style={styles.upgradeContent}>
+                <Text style={styles.upgradeTitle}>Upgrade to Pro</Text>
+                <Text style={styles.upgradeDescription}>
+                  Unlock unlimited tasks, detailed analytics, household sharing, and custom reminders.
+                </Text>
+                <View style={styles.upgradeFeatures}>
+                  <Text style={styles.upgradeFeature}>✓ Unlimited tasks</Text>
+                  <Text style={styles.upgradeFeature}>✓ Analytics dashboard</Text>
+                  <Text style={styles.upgradeFeature}>✓ Household sharing</Text>
+                  <Text style={styles.upgradeFeature}>✓ Email & SMS reminders</Text>
+                </View>
+              </View>
+              <View style={styles.upgradeButtonContainer}>
+                <Button onPress={handleUpgrade} fullWidth>
+                  Upgrade Now
+                </Button>
+              </View>
+            </LinearGradient>
           </View>
         )}
 
+        {/* Preferences Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Preferences</Text>
+          <View style={styles.card}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => router.push("/notifications")}
+            >
+              <Text style={styles.menuText}>Notifications</Text>
+              <Text style={styles.menuArrow}>›</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* App Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>App</Text>
           <View style={styles.card}>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => router.push("/about")}
+            >
               <Text style={styles.menuText}>About LifeOps</Text>
               <Text style={styles.menuArrow}>›</Text>
             </TouchableOpacity>
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => router.push("/privacy")}
+            >
               <Text style={styles.menuText}>Privacy Policy</Text>
               <Text style={styles.menuArrow}>›</Text>
             </TouchableOpacity>
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => router.push("/terms")}
+            >
               <Text style={styles.menuText}>Terms of Service</Text>
               <Text style={styles.menuArrow}>›</Text>
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* Sign Out */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
 
         <Text style={styles.version}>Version 1.0.0</Text>
       </ScrollView>
+
+      <ConfirmDialog
+        visible={showLogoutDialog}
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        confirmText="Sign Out"
+        cancelText="Cancel"
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutDialog(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -131,6 +203,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "SpaceGrotesk_400Regular",
     color: theme.mutedForeground,
+    maxWidth: "60%",
+    textAlign: "right",
   },
   divider: {
     height: 1,
@@ -144,7 +218,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   planBadgePro: {
-    backgroundColor: theme.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   planText: {
     fontSize: 12,
@@ -152,18 +228,22 @@ const styles = StyleSheet.create({
     color: theme.mutedForeground,
   },
   planTextPro: {
-    color: theme.primaryForeground,
+    fontSize: 12,
+    fontFamily: "SpaceGrotesk_700Bold",
+    color: "#FFFFFF",
   },
   upgradeCard: {
-    backgroundColor: "rgba(129, 140, 248, 0.1)",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 20,
     borderWidth: 1,
     borderColor: "rgba(129, 140, 248, 0.3)",
   },
+  upgradeContent: {
+    marginBottom: 16,
+  },
   upgradeTitle: {
-    fontSize: 18,
-    fontFamily: "SpaceGrotesk_600SemiBold",
+    fontSize: 20,
+    fontFamily: "SpaceGrotesk_700Bold",
     color: theme.foreground,
     marginBottom: 8,
   },
@@ -172,17 +252,18 @@ const styles = StyleSheet.create({
     fontFamily: "SpaceGrotesk_400Regular",
     color: theme.mutedForeground,
     marginBottom: 16,
+    lineHeight: 20,
   },
-  upgradeButton: {
-    backgroundColor: theme.foreground,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
+  upgradeFeatures: {
+    gap: 8,
   },
-  upgradeButtonText: {
-    color: theme.background,
-    fontSize: 16,
+  upgradeFeature: {
+    fontSize: 14,
     fontFamily: "SpaceGrotesk_500Medium",
+    color: theme.foreground,
+  },
+  upgradeButtonContainer: {
+    marginTop: 4,
   },
   menuItem: {
     flexDirection: "row",

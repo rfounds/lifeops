@@ -5,7 +5,13 @@ import {
   authenticateRequest,
   errorResponse,
   successResponse,
+  optionsResponse,
 } from "@/lib/mobile-auth";
+
+// OPTIONS /api/mobile/tasks - Handle CORS preflight
+export async function OPTIONS() {
+  return optionsResponse();
+}
 
 // GET /api/mobile/tasks - Get all tasks
 export async function GET(request: NextRequest) {

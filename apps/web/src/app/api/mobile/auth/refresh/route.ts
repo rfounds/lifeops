@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { verifyToken, generateTokens, errorResponse, successResponse } from "@/lib/mobile-auth";
+import { verifyToken, generateTokens, errorResponse, successResponse, optionsResponse } from "@/lib/mobile-auth";
+
+export async function OPTIONS() {
+  return optionsResponse();
+}
 
 export async function POST(request: NextRequest) {
   try {
