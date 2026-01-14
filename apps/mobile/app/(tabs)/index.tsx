@@ -10,7 +10,7 @@ import {
   Platform,
   Pressable,
 } from "react-native";
-import { router } from "expo-router";
+import { router, Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { format, differenceInDays, startOfDay } from "date-fns";
