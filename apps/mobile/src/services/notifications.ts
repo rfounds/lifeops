@@ -2,6 +2,7 @@ import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 import { differenceInDays, startOfDay, format, setHours, setMinutes } from "date-fns";
 
 const NOTIFICATION_SETTINGS_KEY = "@lifeops_notification_settings";
@@ -61,8 +62,11 @@ export async function registerForPushNotifications(): Promise<string | null> {
 
   // Get the push token
   try {
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ||
+      process.env.EXPO_PUBLIC_PROJECT_ID;
     const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
+      projectId,
     });
     token = tokenData.data;
   } catch (error) {

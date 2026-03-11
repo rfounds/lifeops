@@ -17,7 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.lifeops.app",
+    bundleIdentifier: "dev.lifeops.app",
     infoPlist: {
       UIBackgroundModes: ["fetch", "remote-notification"],
       ITSAppUsesNonExemptEncryption: false,
@@ -29,7 +29,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: "#0f0f0f",
     },
     edgeToEdgeEnabled: true,
-    package: "com.lifeops.app",
+    package: "dev.lifeops.app",
   },
   web: {
     bundler: "metro",

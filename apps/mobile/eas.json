@@ -14,16 +14,21 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://lifeops.dev"
+        "EXPO_PUBLIC_API_URL": "https://lifeops.dev",
+        "EXPO_PUBLIC_PROJECT_ID": "96a5ea3d-8af7-4be3-b6b7-4b90fab719cd"
       },
       "ios": {
         "simulator": false
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://lifeops.dev"
+        "EXPO_PUBLIC_API_URL": "https://lifeops.dev",
+        "EXPO_PUBLIC_PROJECT_ID": "96a5ea3d-8af7-4be3-b6b7-4b90fab719cd"
       },
       "ios": {
         "image": "latest"
@@ -36,9 +41,8 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "YOUR_APPLE_ID",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "YOUR_TEAM_ID"
+        "appleId": "r2founds@gmail.com",
+        "appleTeamId": "N2Q6YU9Q8P"
       }
     }
   }
